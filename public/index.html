@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101812">
+    <title>Futbolcu Bil — Kulüp ve ülke eşleşmesini bul</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Futbolcu Bil ana sayfa">
+          <span class="brand-mark" aria-hidden="true">F</span>
+          <span>FUTBOLCU<span class="brand-light">BIL</span></span>
+        </a>
+        <span class="status-pill"><span class="status-dot"></span> 2 oyunculu futbol oyunu</span>
+      </header>
+
+      <section id="home-screen" class="home-screen">
+        <div class="hero-copy">
+          <p class="eyebrow">BILGI + HIZ = GOL</p>
+          <h1>Ayni kulup.<br><span>Ayni ulke.</span><br>Ilk bilen kazanir.</h1>
+          <p class="hero-description">Bir futbolcu bulun; soyleyin ya da yazin. Sistem sohbetteki ismi yakalar ve kulup ile milli takim eslesmesini kontrol eder.</p>
+          <div class="how-it-works">
+            <span><b>01</b> Oda kur veya katil</span>
+            <span><b>02</b> Ortak takim ve ulkeyi gor</span>
+            <span><b>03</b> Futbolcuyu ilk sen bul</span>
+          </div>
+        </div>
+
+        <div class="entry-card">
+          <div class="card-heading">
+            <p class="eyebrow">MACA HAZIR MISIN?</p>
+            <h2>Oyuna gir</h2>
+          </div>
+          <label class="field-label" for="player-name">Oyuncu adin</label>
+          <input id="player-name" class="text-input" maxlength="24" placeholder="Orn. Alex" autocomplete="nickname">
+          <button id="create-room" class="button button-primary">Oda olustur <span aria-hidden="true">→</span></button>
+          <div class="divider"><span>veya</span></div>
+          <label class="field-label" for="room-code">Oda kodun var mi?</label>
+          <div class="join-row">
+            <input id="room-code" class="text-input code-input" maxlength="5" placeholder="ABCDE" autocomplete="off">
+            <button id="join-room" class="button button-secondary">Katil</button>
+          </div>
+          <p id="entry-error" class="error-message" role="alert"></p>
+        </div>
+      </section>
+
+      <section id="room-screen" class="room-screen hidden" aria-live="polite">
+        <div class="room-heading">
+          <div>
+            <p id="phase-eyebrow" class="eyebrow">ODA BEKLIYOR</p>
+            <h1 id="room-title">Takimini bekle</h1>
+          </div>
+          <div class="room-code-wrap">
+            <span>ODA KODU</span>
+            <button id="copy-code" class="room-code" type="button" aria-label="Oda kodunu kopyala"></button>
+          </div>
+        </div>
+
+        <div id="lobby-panel" class="game-panel">
+          <div class="players-grid">
+            <div class="player-card">
+              <span class="player-number">OYUNCU 01</span>
+              <strong id="player-one">-</strong>
+              <span class="player-state">Oda sahibi</span>
+            </div>
+            <div class="versus">VS</div>
+            <div class="player-card waiting">
+              <span class="player-number">OYUNCU 02</span>
+              <strong id="player-two">Bekleniyor...</strong>
+              <span id="opponent-state" class="player-state">Oda koduyla katilsin</span>
+            </div>
+          </div>
+          <div id="setup-form" class="round-setup hidden">
+            <div>
+              <p class="eyebrow">TURU KUR</p>
+              <h2>Ortak hedefi belirle</h2>
+              <p class="muted">Iki oyuncu da bu takimda oynamis ve bu ulkenin milli takiminda yer almis bir futbolcu bulacak.</p>
+            </div>
+            <div class="setup-fields">
+              <label class="field-label" for="team-name">Takim / kulup</label>
+              <input id="team-name" class="text-input" placeholder="Orn. Galatasaray">
+              <label class="field-label" for="country-name">Ulke</label>
+              <input id="country-name" class="text-input" placeholder="Orn. Turkiye">
+              <button id="start-game" class="button button-primary">Turu baslat <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
+          <div id="waiting-message" class="waiting-message">
+            <span class="loader" aria-hidden="true"></span>
+            <span>Arkadasin oyuna katilinca turu baslatabilirsin.</span>
+          </div>
+        </div>
+
+        <div id="active-panel" class="game-panel hidden">
+          <div class="target-strip">
+            <div><span>TAKIM</span><strong id="target-team">-</strong></div>
+            <span class="target-plus" aria-hidden="true">+</span>
+            <div><span>ULKE / MILLI TAKIM</span><strong id="target-country">-</strong></div>
+          </div>
+          <div class="race-area">
+            <div class="race-title">
+              <div><p class="eyebrow">YARIS BASLADI</p><h2>Bir futbolcu soyle!</h2></div>
+              <span class="live-pill"><span></span> CANLI</span>
+            </div>
+            <p class="muted">Konusma otomatik aranir. Dogru isim, iki kosul da Wikidata'da dogrulaninca kazandirir.</p>
+            <div class="speech-controls">
+              <label class="field-label" for="listen-mode">Dinleme modu</label>
+              <select id="listen-mode" class="text-input">
+                <option value="push_to_talk">Bas-konus (varsayilan)</option>
+                <option value="session_listen">Oyun boyunca dinle</option>
+                <option value="ambient">Surekli dinle (sen baslat)</option>
+              </select>
+              <div class="voice-row">
+                <button id="talk-button" class="button button-voice" type="button"><span aria-hidden="true">●</span> Basili tut ve konus</button>
+                <button id="ambient-button" class="button button-secondary hidden" type="button">Dinlemeyi baslat</button>
+                <span id="voice-status" class="voice-status">Mikrofon kapali</span>
+              </div>
+            </div>
+            <label class="field-label" for="guess-input">Konusulan cumle veya futbolcu adi</label>
+            <div class="guess-row">
+              <input id="guess-input" class="text-input" placeholder="Orn. Lionel Messi">
+              <button id="submit-guess" class="button button-primary">Kontrol et</button>
+            </div>
+            <p class="privacy-note">Algilanan yazi futbolcu kontrolu icin oyun sunucusuna ve Wikidata'ya gonderilir. Sesin islenmesi tarayiciya gore degisebilir; dinlemeyi istedigin an durdurabilirsin.</p>
+            <div id="game-result" class="result-message" role="status"></div>
+            <div class="race-players">
+              <span id="race-player-one"></span><span id="race-player-two"></span>
+            </div>
+          </div>
+        </div>
+
+        <div id="finished-panel" class="game-panel finished-panel hidden">
+          <div class="trophy" aria-hidden="true">★</div>
+          <p class="eyebrow">MAC TAMAMLANDI</p>
+          <h2 id="winner-title">Kazanan belli!</h2>
+          <p id="winner-detail" class="muted"></p>
+          <button id="leave-room" class="button button-secondary">Ana ekrana don</button>
+        </div>
+        <p id="room-error" class="error-message" role="alert"></p>
+      </section>
+
+      <footer class="footer"><span>Oda bilgileri bu sunucunun belleğinde tutulur.</span><span>Futbol bilgileri Wikidata'dan kontrol edilir.</span></footer>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
