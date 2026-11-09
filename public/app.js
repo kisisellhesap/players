@@ -5,8 +5,32 @@ const entryError = $("#entry-error");
 const roomError = $("#room-error");
 const recognitionAvailable = "SpeechRecognition" in window || "webkitSpeechRecognition" in window;
 
-let playerId = sessionStorage.getItem("playerId");
-let roomCode = sessionStorage.getItem("roomCode");
+function readStoredValue(key) {
+  try {
+    return sessionStorage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeStoredValue(key, value) {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch (error) {
+    // Ignore storage errors from private mode / restricted environments.
+  }
+}
+
+function removeStoredValue(key) {
+  try {
+    sessionStorage.removeItem(key);
+  } catch (error) {
+    // Ignore storage errors from private mode / restricted environments.
+  }
+}
+
+let playerId = readStoredValue("playerId");
+let roomCode = readStoredValue("roomCode");
 let roomState = null;
 let pollTimer = null;
 let recognition = null;
@@ -37,15 +61,15 @@ function setBusy(button, busy, text) {
 function rememberRoom(code, id) {
   roomCode = code;
   playerId = id;
-  sessionStorage.setItem("roomCode", code);
-  sessionStorage.setItem("playerId", id);
+  writeStoredValue("roomCode", code);
+  writeStoredValue("playerId", String(id));
 }
 
 function clearRoom() {
   stopRecognition();
   clearInterval(pollTimer);
-  sessionStorage.removeItem("roomCode");
-  sessionStorage.removeItem("playerId");
+  removeStoredValue("roomCode");
+  removeStoredValue("playerId");
   roomCode = null;
   playerId = null;
   roomState = null;
@@ -55,30 +79,31 @@ function clearRoom() {
 
 function showRoom(room) {
   roomState = room;
+  const players = Array.isArray(room.players) ? room.players : [];
   homeScreen.classList.add("hidden");
   roomScreen.classList.remove("hidden");
   $("#copy-code").textContent = room.code;
 
-  const ownPlayer = room.players.find((player) => player.id === playerId);
+  const ownPlayer = players.find((player) => player.id === playerId);
   const host = playerId === room.hostPlayerId;
-  $("#player-one").textContent = room.players[0]?.name || "-";
-  $("#player-two").textContent = room.players[1]?.name || "Bekleniyor...";
-  $("#opponent-state").textContent = room.players[1] ? "Oyuna hazir" : "Oda koduyla katilsin";
-  $("#waiting-message").classList.toggle("hidden", room.players.length === 2);
-  $("#setup-form").classList.toggle("hidden", room.phase !== "lobby" || !host || room.players.length !== 2);
+  $("#player-one").textContent = players[0]?.name || "-";
+  $("#player-two").textContent = players[1]?.name || "Bekleniyor...";
+  $("#opponent-state").textContent = players[1] ? "Oyuna hazir" : "Oda koduyla katilsin";
+  $("#waiting-message").classList.toggle("hidden", players.length === 2);
+  $("#setup-form").classList.toggle("hidden", room.phase !== "lobby" || !host || players.length !== 2);
   $("#lobby-panel").classList.toggle("hidden", room.phase !== "lobby");
   $("#active-panel").classList.toggle("hidden", room.phase !== "active");
   $("#finished-panel").classList.toggle("hidden", room.phase !== "finished");
   $("#phase-eyebrow").textContent = room.phase === "lobby" ? "ODA BEKLIYOR" : room.phase === "active" ? "CANLI TUR" : "TUR TAMAMLANDI";
-  $("#room-title").textContent = room.phase === "lobby" ? (room.players.length === 2 ? "Turunu kur" : "Takimini bekle") : room.phase === "active" ? "Hedef futbolcuyu bul" : "Mac sona erdi";
+  $("#room-title").textContent = room.phase === "lobby" ? (players.length === 2 ? "Turunu kur" : "Takimini bekle") : room.phase === "active" ? "Hedef futbolcuyu bul" : "Mac sona erdi";
 
   if (room.phase === "active") {
     $("#target-team").textContent = room.team.label;
     $("#target-country").textContent = room.country.label;
-    $("#race-player-one").textContent = room.players[0] ? `${room.players[0].name}${room.players[0].id === playerId ? " (sen)" : ""}` : "";
-    $("#race-player-two").textContent = room.players[1] ? `${room.players[1].name}${room.players[1].id === playerId ? " (sen)" : ""}` : "";
-    $("#race-player-one").classList.toggle("current-player", room.players[0]?.id === playerId);
-    $("#race-player-two").classList.toggle("current-player", room.players[1]?.id === playerId);
+    $("#race-player-one").textContent = players[0] ? `${players[0].name}${players[0].id === playerId ? " (sen)" : ""}` : "";
+    $("#race-player-two").textContent = players[1] ? `${players[1].name}${players[1].id === playerId ? " (sen)" : ""}` : "";
+    $("#race-player-one").classList.toggle("current-player", players[0]?.id === playerId);
+    $("#race-player-two").classList.toggle("current-player", players[1]?.id === playerId);
     if (room.lastResult) {
       $("#game-result").textContent = room.lastResult.message;
       $("#game-result").classList.toggle("invalid", !room.lastResult.valid);
@@ -90,7 +115,7 @@ function showRoom(room) {
     stopRecognition();
     $("#winner-title").textContent = `${room.winner.name} kazandi!`;
     $("#winner-detail").textContent = `Dogru cevap: ${room.winner.footballer}`;
-  } else if (ownPlayer && !room.players.some((player) => player.id === playerId)) {
+  } else if (!ownPlayer) {
     clearRoom();
   }
 }
@@ -99,7 +124,8 @@ async function refreshRoom() {
   if (!roomCode) return;
   try {
     const result = await api(`/api/rooms/${encodeURIComponent(roomCode)}`);
-    if (!result.room.players.some((player) => player.id === playerId)) {
+    const players = Array.isArray(result.room.players) ? result.room.players : [];
+    if (!players.some((player) => player.id === playerId)) {
       clearRoom();
       setError(entryError, "Oda bilgisi bulunamadi. Yeni bir oda kur veya tekrar katil.");
       return;
